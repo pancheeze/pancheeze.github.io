@@ -1,0 +1,3 @@
+ext install RimuruChan.vscode-fix-checksums-next
+
+code --install-extension RimuruChan.vscode-fix-checksums-next

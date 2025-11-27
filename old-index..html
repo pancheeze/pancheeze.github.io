@@ -681,11 +681,74 @@
             margin-bottom: 1rem;
             transition: transform 0.4s ease, box-shadow 0.4s ease;
             flex-shrink: 0;
+            cursor: zoom-in;
         }
 
         .project-image:hover {
             transform: scale(1.03);
             box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+        }
+
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(6, 10, 25, 0.85);
+            backdrop-filter: blur(6px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 2000;
+        }
+
+        .lightbox.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .lightbox img {
+            max-width: min(95vw, 1100px);
+            max-height: 88vh;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 70px rgba(15, 19, 35, 0.6);
+            transform: scale(0.94);
+            transition: transform 0.35s ease;
+            cursor: zoom-in;
+        }
+
+        .lightbox.active img {
+            transform: scale(1.06);
+        }
+
+        .lightbox img.zoomed {
+            transform: scale(1.45);
+            cursor: zoom-out;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(15, 23, 42, 0.65);
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 0.85rem;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            line-height: 1;
+            transition: all 0.25s ease;
+        }
+
+        .lightbox-close:hover,
+        .lightbox-close:focus {
+            background: rgba(99, 102, 241, 0.8);
+            outline: none;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
         }
 
 
@@ -928,6 +991,11 @@
             .theme-toggle-label {
                 padding: 0.5rem 1rem;
             }
+
+            .lightbox-close {
+                top: 1rem;
+                right: 1rem;
+            }
         }
     </style>
 </head>
@@ -1058,8 +1126,31 @@
                             <strong>Editing Tool:</strong>
                             <p> • Photoshop</p>
                         </div>
-                        
+
                     </div>
+
+                    <!--Knives using js loop-->
+                    <div class="project-card">
+                        <img src="assets/knives.png" alt="Ireland Showcase" class="project-image">
+                        <h3>Knives Showcase</h3>
+                        <p class="project-description">
+                            A simple knife gallery project showcasing different real-world knife types. The list of
+                            names, images, and descriptions is generated using a clean JavaScript loop, making it easy
+                            to manage, update, and expand without manually editing the HTML.
+                        </p>
+                        <div class="project-languages">
+                            <strong>Languages & Frameworks:</strong>
+                            <p> • Html •BootstrapCSS •JS</p>
+                        </div>
+                        <div class="project-links">
+                            <a href="https://pancheeze.github.io/knife-showcase/" target="_blank" class="project-btn">🔗 View
+                                Project</a>
+                            <a href="https://github.com/pancheeze/knife-showcase.git" target="_blank"
+                                class="project-btn secondary">💻
+                                Source Code</a>
+                        </div>
+                    </div>
+
 
                 </div>
             </section>
@@ -1119,7 +1210,83 @@
                 <p>&copy; 2025 Paul Anthony Pancho Exploring the digital cosmos, one project at a time.</p>
             </footer>
         </div>
+
+        <div id="image-lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Image preview" aria-hidden="true">
+            <button type="button" class="lightbox-close" aria-label="Close image preview">&#10005;</button>
+            <img src="" alt="Preview">
+        </div>
     </div>
+
+    <script>
+        (function () {
+            const lightbox = document.getElementById('image-lightbox');
+            if (!lightbox) {
+                return;
+            }
+
+            const lightboxImage = lightbox.querySelector('img');
+            const closeButton = lightbox.querySelector('.lightbox-close');
+            const projectImages = document.querySelectorAll('.project-image');
+            let lastFocusedImage = null;
+
+            const openLightbox = (img) => {
+                lastFocusedImage = img;
+                lightboxImage.classList.remove('zoomed');
+                const fullSrc = img.dataset.full || img.src;
+                lightboxImage.src = fullSrc;
+                lightboxImage.alt = img.alt || 'Project preview';
+                lightbox.classList.add('active');
+                lightbox.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+                closeButton.focus();
+            };
+
+            const closeLightbox = () => {
+                lightbox.classList.remove('active');
+                lightbox.setAttribute('aria-hidden', 'true');
+                lightboxImage.src = '';
+                lightboxImage.classList.remove('zoomed');
+                document.body.style.overflow = '';
+                if (lastFocusedImage) {
+                    lastFocusedImage.focus();
+                    lastFocusedImage = null;
+                }
+            };
+
+            projectImages.forEach((img) => {
+                img.addEventListener('click', () => openLightbox(img));
+                img.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        openLightbox(img);
+                    }
+                });
+                img.setAttribute('tabindex', '0');
+            });
+
+            closeButton.addEventListener('click', closeLightbox);
+
+            lightboxImage.addEventListener('click', (event) => {
+                event.stopPropagation();
+                if (!lightbox.classList.contains('active')) {
+                    return;
+                }
+                lightboxImage.classList.toggle('zoomed');
+            });
+
+            lightbox.addEventListener('click', (event) => {
+                if (event.target === lightbox) {
+                    closeLightbox();
+                }
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && lightbox.classList.contains('active')) {
+                    closeLightbox();
+                }
+            });
+        })();
+    </script>
 </body>
 
 </html>
